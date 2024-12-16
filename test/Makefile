@@ -5,7 +5,7 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = tt_um_atomNPU.v
+PROJECT_SOURCES = tt_um_atomNPU.v atom_npu_core.v
 
 ifneq ($(GATES),yes)
 
