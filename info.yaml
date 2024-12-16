@@ -1,6 +1,6 @@
 # Tiny Tapeout project information
 project:
-  title:        "AtonNPU"      # Project title
+  title:        "AtomNPU"      # Project title
   author:       "Aakash Apoorv"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
   description:  "A 4-bit Neural Processing Unit performing multiply-accumulate operations"      # One line description of what your project does
