@@ -65,7 +65,30 @@ To prevent overflow and ensure the output remains within the 4-bit constraint, t
 
 ## How to test
 
-Explain how to use your project
+Below is a step-by-step guide to facilitate thorough testing.
+
+### **Testing Procedure**
+
+1.  **Initialization:**
+    
+    -   **Power Up:** Ensure the ASIC is properly powered.
+    -   **Reset:** Press the **reset button** (asserting `rst_n` low) to initialize the NPU.
+2.  **Setting Inputs:**
+    
+    -   **Input Data (`input_data [3:0]`):**
+        -   Use **switches/buttons** connected to `ui_in[3:0]` to set the 4-bit activation vector.
+    -   **Weight (`weight [3:0]`):**
+        -   Use **switches/buttons** connected to `uio_in[3:0]` to set the 4-bit weight vector.
+3.  **Initiating Operation:**
+    
+    -   Press the **`start` button** (connected to `uio_in[4]`) to begin the MAC operation.
+    -   The **`start`** signal is internally connected to initiate the NPU's state machine.
+4.  **Observing Outputs:**
+    
+    -   **`output_data [3:0]` (`uo_out[3:0]`):**
+        -   Observe the **LEDs** connected to `uo_out[3:0]` to view the resulting 4-bit output.
+    -   **`done` Signal (`uo_out[4]`):**
+        -   The **status LED** connected to `uo_out[4]` will illuminate (`1`) once the operation is complete.
 
 ## External hardware
 
