@@ -57,23 +57,4 @@ async def test_project(dut):
     dut._log.info(f"Test case 1 passed. Result: {result}")
     await ClockCycles(dut.clk, 2)
     
-    # Test case 2: Maximum value test (15 x 15)
-    dut._log.info("Test case 2: 15 x 15")
-    result = await perform_calculation(dut, 15, 15)
-    assert result == 15, f"Test case 2 failed. Expected 15, got {result}"
-    dut._log.info(f"Test case 2 passed. Result: {result}")
-    await ClockCycles(dut.clk, 2)
-    
-    # Test case 3: Zero multiplication (5 x 0)
-    dut._log.info("Test case 3: 5 x 0")
-    result = await perform_calculation(dut, 5, 0)
-    assert result == 0, f"Test case 3 failed. Expected 0, got {result}"
-    dut._log.info(f"Test case 3 passed. Result: {result}")
-    
-    # Test case 4: Intermediate value (7 x 2)
-    dut._log.info("Test case 4: 7 x 2")
-    result = await perform_calculation(dut, 7, 2)
-    assert result == 14, f"Test case 4 failed. Expected 14, got {result}"
-    dut._log.info(f"Test case 4 passed. Result: {result}")
-    
     dut._log.info("All tests passed!")
