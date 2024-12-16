@@ -2,80 +2,78 @@
 # SPDX-License-Identifier: Apache-2.0
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb.triggers import ClockCycles, RisingEdge, FallingEdge
 
-@cocotb.test()
-async def test_project(dut):
-    dut._log.info("Start")
-    
-    # Create a 10us period clock on port clk
-    clock = Clock(dut.clk, 10, units="us")
-    cocotb.start_soon(clock.start())
-    
-    # Reset sequence
-    dut._log.info("Reset")
+async def reset_dut(dut):
     dut.ena.value = 1
     dut.ui_in.value = 0
     dut.uio_in.value = 0
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 10)
     dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 5)
+
+async def perform_calculation(dut, input_data, weight):
+    dut.ui_in.value = input_data & 0xF
+    dut.uio_in.value = weight & 0xF 
+    await ClockCycles(dut.clk, 2)
+    
+    # Then assert start signal
+    dut.uio_in.value = (weight & 0xF) | 0x10
+    await ClockCycles(dut.clk, 1)
+    
+    # Clear start signal
+    dut.uio_in.value = weight & 0xF
+    
+    # Wait for done signal
+    max_cycles = 20
+    for _ in range(max_cycles):
+        if dut.uo_out.value & 0x20:
+            break
+        await RisingEdge(dut.clk)
+    
+    # Wait one more cycle for stability
+    await ClockCycles(dut.clk, 1)
+    
+    # Return result
+    return dut.uo_out.value & 0xF
+
+@cocotb.test()
+async def test_project(dut):
+    dut._log.info("Start")
+    
+    # Create a 10us period clock
+    clock = Clock(dut.clk, 10, units="us")
+    cocotb.start_soon(clock.start())
+    
+    # Reset the DUT
+    dut._log.info("Reset")
+    await reset_dut(dut)
     
     # Test case 1: Simple multiplication (2 x 3)
     dut._log.info("Test case 1: 2 x 3")
-    dut.ui_in.value = 2  # input_data = 2
-    dut.uio_in.value = 0x13  # weight = 3, start = 1 (bit 4)
-    
-    # Wait for done signal (bit 5 of uo_out)
-    max_cycles = 20
-    cycles = 0
-    while cycles < max_cycles and dut.uo_out.value & 0x20 == 0:
-        await RisingEdge(dut.clk)
-        cycles += 1
-    
-    # Check result - expected 6
-    result = dut.uo_out.value & 0x0F
+    result = await perform_calculation(dut, 2, 3)
     assert result == 6, f"Test case 1 failed. Expected 6, got {result}"
     dut._log.info(f"Test case 1 passed. Result: {result}")
-    
-    # Reset start signal
-    dut.uio_in.value = 0x03  # Keep weight = 3, start = 0
     await ClockCycles(dut.clk, 2)
     
     # Test case 2: Maximum value test (15 x 15)
     dut._log.info("Test case 2: 15 x 15")
-    dut.ui_in.value = 15  # input_data = 15
-    dut.uio_in.value = 0x1F  # weight = 15, start = 1
-    
-    # Wait for done signal
-    cycles = 0
-    while cycles < max_cycles and dut.uo_out.value & 0x20 == 0:
-        await RisingEdge(dut.clk)
-        cycles += 1
-    
-    # Check result - expected 15 (saturation)
-    result = dut.uo_out.value & 0x0F
+    result = await perform_calculation(dut, 15, 15)
     assert result == 15, f"Test case 2 failed. Expected 15, got {result}"
     dut._log.info(f"Test case 2 passed. Result: {result}")
-    
-    # Reset start signal
-    dut.uio_in.value = 0x0F  # Keep weight = 15, start = 0
     await ClockCycles(dut.clk, 2)
     
-    # Test case 3: Zero multiplication
+    # Test case 3: Zero multiplication (5 x 0)
     dut._log.info("Test case 3: 5 x 0")
-    dut.ui_in.value = 5  # input_data = 5
-    dut.uio_in.value = 0x10  # weight = 0, start = 1
-    
-    # Wait for done signal
-    cycles = 0
-    while cycles < max_cycles and dut.uo_out.value & 0x20 == 0:
-        await RisingEdge(dut.clk)
-        cycles += 1
-    
-    # Check result - expected 0
-    result = dut.uo_out.value & 0x0F
+    result = await perform_calculation(dut, 5, 0)
     assert result == 0, f"Test case 3 failed. Expected 0, got {result}"
     dut._log.info(f"Test case 3 passed. Result: {result}")
+    
+    # Test case 4: Intermediate value (7 x 2)
+    dut._log.info("Test case 4: 7 x 2")
+    result = await perform_calculation(dut, 7, 2)
+    assert result == 14, f"Test case 4 failed. Expected 14, got {result}"
+    dut._log.info(f"Test case 4 passed. Result: {result}")
     
     dut._log.info("All tests passed!")
