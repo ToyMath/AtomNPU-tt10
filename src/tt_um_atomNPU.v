@@ -20,6 +20,7 @@ module tt_um_atomNPU (
     wire start;
     wire done;
     wire npu_done;
+    wire [3:0] npu_output; // Corrected width to match output_data[3:0]
 
     // Assign 'start' to uio_in[4]
     assign start = uio_in[4];
@@ -31,19 +32,19 @@ module tt_um_atomNPU (
         .start(start),
         .input_data(ui_in[3:0]),   // Using lower 4 bits of ui_in
         .weight(uio_in[3:0]),      // Using lower 4 bits of uio_in
-        .output_data(npu_output[3:0]),
+        .output_data(npu_output),
         .done(npu_done)
     );
 
-    // Assign the lower 4 bits of uo_out to the NPU output and set upper bits to 0
-    assign uo_out = {4'd0, npu_output[3:0]};
+    // Assign 'done' signal from NPU core to internal 'done' wire
+    assign done = npu_done;
+
+    // Assign the lower 4 bits of uo_out to the NPU output and set specific bits
+    assign uo_out = {2'b00, done, 1'b0, npu_output}; // uo_out[5] = done, others as needed
 
     // Assign unused outputs to 0
-    assign uio_out = 8'd0;
+    assign uio_out = {2'b00, done, 1'b0, npu_output};
     assign uio_oe  = 8'd0;
-
-    // Assign 'done' signal
-    assign done = npu_done;
 
     // List all unused inputs to prevent warnings
     wire unused = &{ena, clk, rst_n, 1'b0, ui_in[7:4], uio_in[7:4]};
