@@ -4,7 +4,6 @@
  */
 
 `default_nettype none
-
 `timescale 1ns / 1ps
 
 module tt_um_atomNPU (
@@ -17,11 +16,15 @@ module tt_um_atomNPU (
     input  wire       clk,      // clock
     input  wire       rst_n     // reset_n - low to reset
 );
+    // Declare internal wires
+    wire start;
+    wire done;
+    wire npu_done;
 
-    // All output pins must be assigned. If not used, assign to 0.
-    // For this NPU, only uo_out[3:0] is used to output the result.
-    // The upper 4 bits are set to 0.
-    wire [7:0] npu_output;
+    // Assign 'start' to uio_in[4]
+    assign start = uio_in[4];
+
+    // Instantiate the Tiny NPU Core
     atom_npu_core npu (
         .clk(clk),
         .rst_n(rst_n),
@@ -39,11 +42,9 @@ module tt_um_atomNPU (
     assign uio_out = 8'd0;
     assign uio_oe  = 8'd0;
 
-    // Assign done signal (optional: could be used for debugging or status)
-    wire npu_done;
+    // Assign 'done' signal
     assign done = npu_done;
 
     // List all unused inputs to prevent warnings
-    wire _unused = &{ena, clk, rst_n, 1'b0, ui_in[7:4], uio_in[7:4]};
-
+    wire unused = &{ena, clk, rst_n, 1'b0, ui_in[7:4], uio_in[7:4]};
 endmodule
